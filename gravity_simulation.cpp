@@ -20,7 +20,7 @@ int main()
     sf::CircleShape circle (radius);
     circle.setFillColor(sf::Color::Cyan);
     circle.setOrigin({radius,radius});
-    circle.setPosition({x_size/2.f, radius+1});
+    circle.setPosition({radius,radius});
 
     // boundary conditions of the circle to implement collision
     struct shapeBoundary
@@ -33,14 +33,14 @@ int main()
     struct shapeBoundary circle_boundary 
     { 
         radius,  
-        x_size-radius,
-        radius,
+        x_size-radius, radius,
         y_size-radius,
     }; 
 
     // define the velocity and gravity in meters per second and meters per second squared respectively
     float gravity=metersToPixels(9.81);
-    float velocity = metersToPixels(0); 
+    float velocity_x = metersToPixels(5);
+    float velocity_y = metersToPixels(0); 
 
     // create a clock before the loop
     sf::Clock clock;
@@ -78,30 +78,39 @@ int main()
         float time_elapsed = clock.restart().asSeconds();
         if (sim_status)
         {
-
-            velocity += gravity * time_elapsed;
+            velocity_y += gravity * time_elapsed;
 
             sf::Vector2f position_check = circle.getPosition();
 
-            float x_position = position_check.x + 0;
-            float y_position = position_check.y + velocity * time_elapsed + 0.5f * gravity * time_elapsed * time_elapsed;
+            float x_position = position_check.x + (velocity_x * time_elapsed);
+            float y_position = position_check.y + velocity_y * time_elapsed + 0.5f * gravity * time_elapsed * time_elapsed;
 
+            // jitter/ clamping conditions
             if (y_position>circle_boundary.bottom)
                 y_position=circle_boundary.bottom;
             else if (y_position<circle_boundary.top)
                 y_position=circle_boundary.top;
+            if (x_position>circle_boundary.right)            
+                x_position=circle_boundary.right;
+            else if (x_position<circle_boundary.left)
+                x_position=circle_boundary.left;
 
             circle.setPosition({x_position,y_position});
 
 
             // COLLISION CHECK
             // if it hits the floor
-            if (y_position >=circle_boundary.bottom && velocity>0)
-                velocity = -0.8*velocity; 
+            if (y_position >=circle_boundary.bottom && velocity_y>0)
+                velocity_y = -0.8*velocity_y; 
             // if it hits the ceiling
-            if (y_position <=circle_boundary.top && velocity<0)
-                velocity = -0.8*velocity; 
-
+            else if (y_position <=circle_boundary.top && velocity_y<0)
+                velocity_y = -0.8*velocity_y; 
+            // if it hits the right wall
+            if (x_position >=circle_boundary.right && velocity_x>0)
+                velocity_x = -0.8*velocity_x;
+            // if it hits the left wall
+            if (x_position <=circle_boundary.left && velocity_x<0)
+                velocity_x = -0.8*velocity_x;
         }
 
         // render the frame
