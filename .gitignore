@@ -1,0 +1,11 @@
+# Code Runner temporary files
+tempCodeRunnerFile.*
+
+# Compiled executables
+*.exe
+gravity_simulation
+physics-sim
+
+# Editor and OS files
+.directory
+*~
