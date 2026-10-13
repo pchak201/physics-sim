@@ -1,6 +1,8 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <optional>
+#include <vector>
+#include <cstdint>
 
 float metersToPixels(float x) { 
     // the scale of our world is : 100 pixels on the screen is equal to 1 meter in real life
@@ -21,9 +23,11 @@ int main()
     circle.setOrigin({radius,radius});
     circle.setPosition({radius,radius});
 
+
     // boundary conditions of the circle to implement collision
     struct shapeBoundary
-    { float left;
+    {  
+        float left;
         float right;
         float top;
         float bottom;
@@ -49,6 +53,9 @@ int main()
 
     bool sim_status=false;
 
+    std::vector <sf::Vector2f> trail;
+    const std::size_t maxTrailSize=500;
+
     // outer loop to keep the application alive
     while (window.isOpen())
     { 
@@ -66,6 +73,7 @@ int main()
                     velocity_x = initial_velocity_x;
                     velocity_y = initial_velocity_y;
                     circle.setPosition({radius, radius});
+                    trail.clear();
                 }
                 if (key->code == sf::Keyboard::Key::W)
                 { 
@@ -101,6 +109,9 @@ int main()
                 x_position=circle_boundary.left;
 
             circle.setPosition({x_position,y_position});
+            trail.push_back(circle.getPosition());
+            if (trail.size()>maxTrailSize)
+                trail.erase(trail.begin());
 
             // update velocity
             velocity_y += gravity * time_elapsed;
@@ -121,9 +132,23 @@ int main()
                 velocity_x = -0.8*velocity_x;
         }
 
-        // render the frame
         window.clear(sf::Color::Black);
+
+        // implementing trail circle
+        float maxDotRadius = 5.f;
+        for (std::size_t i=0; i<trail.size(); i++)
+        {
+            float currentRadius =  (static_cast<float>(i) / static_cast<float> (trail.size()) ) * maxDotRadius;
+            sf::CircleShape dot(currentRadius);
+            dot.setOrigin({currentRadius, currentRadius});
+            float fade = static_cast<float>(i) / static_cast<float>(trail.size());
+            std::uint8_t alpha = static_cast<std::uint8_t>(fade * 255);
+            dot.setFillColor(sf::Color(255, 0, 0, alpha));
+            dot.setPosition({trail[i]});
+            window.draw(dot);
+        }
         window.draw(circle);
+
         window.display(); 
     }
 }
